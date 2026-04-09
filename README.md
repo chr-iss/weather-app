@@ -1,4 +1,6 @@
-SkyCast Weather App - Summary
+SkyCast Weather App 
+
+Summary
 What it is
 A full-stack weather application that displays real-time weather data for any city worldwide, featuring a modern glass-morphism UI and secure API integration.
 
