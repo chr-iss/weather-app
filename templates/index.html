@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Weather App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        .unit-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .unit-btn {
+            flex: 1;
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .unit-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .weather-card {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .weather-icon {
+            font-size: 80px;
+            margin-bottom: 10px;
+        }
+
+        .temperature {
+            font-size: 54px;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .description {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: capitalize;
+        }
+
+        .location {
+            font-size: 22px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .detail {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ Weather App</h1>
+        <div class="subtitle">Powered by Python + OpenWeatherMap</div>
+        
+        <div class="search-box">
+            <input type="text" id="city" placeholder="Enter city name..." value="London">
+            <button onclick="getWeather()">Search</button>
+        </div>
+        
+        <div class="unit-selector">
+            <button class="unit-btn active" onclick="setUnit('metric')">🌡️ Celsius</button>
+            <button class="unit-btn" onclick="setUnit('imperial')">🌡️ Fahrenheit</button>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="weatherCard" class="weather-card">
+            <div class="weather-icon" id="icon">☁️</div>
+            <div class="temperature" id="temp">--°</div>
+            <div class="description" id="desc">---</div>
+            <div class="location" id="location">---</div>
+            
+            <div class="details">
+                <div class="detail">
+                    <div class="detail-label">💧 Humidity</div>
+                    <div class="detail-value" id="humidity">--%</div>
+                </div>
+                <div class="detail">
+                    <div class="detail-label">💨 Wind Speed</div>
+                    <div class="detail-value" id="wind">-- m/s</div>
+                </div>
+                <div class="detail">
+                    <div class="detail-label">🌡️ Feels Like</div>
+                    <div class="detail-value" id="feels">--°</div>
+                </div>
+                <div class="detail">
+                    <div class="detail-label">📍 Country</div>
+                    <div class="detail-value" id="country">--</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        let currentUnit = 'metric';
+        
+        async function getWeather() {
+            const city = document.getElementById('city').value.trim();
+            if (!city) {
+                showError('Please enter a city name');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('weatherCard').style.opacity = '0.5';
+            document.getElementById('error').style.display = 'none';
+            
+            try {
+                // Call our Python backend
+                const response = await fetch(`/weather?city=${encodeURIComponent(city)}&units=${currentUnit}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Something went wrong');
+                }
+                
+                // Update UI with weather data
+                const tempUnit = currentUnit === 'metric' ? '°C' : '°F';
+                const windUnit = currentUnit === 'metric' ? 'm/s' : 'mph';
+                
+                document.getElementById('temp').innerHTML = `${Math.round(data.temp)}${tempUnit}`;
+                document.getElementById('desc').innerHTML = data.description;
+                document.getElementById('location').innerHTML = data.city;
+                document.getElementById('country').innerHTML = data.country;
+                document.getElementById('humidity').innerHTML = `${data.humidity}%`;
+                document.getElementById('wind').innerHTML = `${data.wind.toFixed(1)} ${windUnit}`;
+                document.getElementById('feels').innerHTML = `${Math.round(data.feels_like)}${tempUnit}`;
+                
+                // Set weather icon
+                const iconMap = {
+                    '01d': '☀️', '01n': '🌙',
+                    '02d': '⛅', '02n': '☁️',
+                    '03d': '☁️', '03n': '☁️',
+                    '04d': '☁️', '04n': '☁️',
+                    '09d': '🌧️', '09n': '🌧️',
+                    '10d': '🌦️', '10n': '🌧️',
+                    '11d': '⛈️', '11n': '⛈️',
+                    '13d': '❄️', '13n': '❄️',
+                    '50d': '🌫️', '50n': '🌫️'
+                };
+                document.getElementById('icon').innerHTML = iconMap[data.icon] || '🌡️';
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('weatherCard').style.opacity = '1';
+            }
+        }
+        
+        function setUnit(unit) {
+            currentUnit = unit;
+            // Update button styles
+            document.querySelectorAll('.unit-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            // Refresh weather
+            getWeather();
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = `❌ ${message}`;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Enter key support
+        document.getElementById('city').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') getWeather();
+        });
+        
+        // Load initial weather
+        getWeather();
+    </script>
+</body>
+</html>
