@@ -1,47 +1,35 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import requests
 
 app = Flask(__name__)
 
-# Your OpenWeatherMap API key (get free from https://openweathermap.org/api)
-API_KEY = "24bbcd2ccf13fbc05886c2a7cdad7f72"  # Demo key - replace with yours!
+API_KEY = "24bbcd2ccf13fbc05886c2a7cdad7f72"
 
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('index.html')
+    return send_from_directory("", "index.html")
 
-@app.route('/weather', methods=['GET'])
+@app.route("/weather")
 def weather():
-    city = request.args.get('city')
-    units = request.args.get('units', 'metric')
-    
-    if not city:
-        return jsonify({'error': 'City required'}), 400
-    
-    # Call OpenWeatherMap API
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&units={units}&appid={API_KEY}"
-    
-    try:
-        response = requests.get(url)
-        data = response.json()
-        
-        if response.status_code != 200:
-            return jsonify({'error': data.get('message', 'City not found')}), 404
-        
-        # Send only needed data to frontend
-        return jsonify({
-            'city': data['name'],
-            'country': data['sys']['country'],
-            'temp': data['main']['temp'],
-            'feels_like': data['main']['feels_like'],
-            'humidity': data['main']['humidity'],
-            'wind': data['wind']['speed'],
-            'description': data['weather'][0]['description'],
-            'icon': data['weather'][0]['icon']
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    city = request.args.get("city")
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    response = requests.get(url)
+    data = response.json()
+
+    if data.get("cod") != 200:
+        return jsonify({"error": "City not found"})
+
+    result = {
+        "city": data["name"],
+        "temperature": data["main"]["temp"],
+        "description": data["weather"][0]["description"],
+        "humidity": data["main"]["humidity"],
+        "wind": data["wind"]["speed"],
+        "icon": data["weather"][0]["icon"]
+    }
+
+    return jsonify(result)
+
+if __name__ == "__main__":
+    app.run(debug=True)
